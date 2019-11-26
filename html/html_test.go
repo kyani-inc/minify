@@ -38,7 +38,7 @@ func TestHTML(t *testing.T) {
 		{`<span attr="test"></span>`, `<span attr=test></span>`},
 		{`<span attr='test&apos;test'></span>`, `<span attr="test'test"></span>`},
 		{`<span attr="test&quot;test"></span>`, `<span attr='test"test'></span>`},
-		{`<span attr='test""&apos;&amp;test'></span>`, `<span attr='test""&#39;&test'></span>`},
+		{`<span attr='test""&apos;&amp;test'></span>`, `<span attr='test""&#39;&amp;test'></span>`},
 		{`<span attr="test/test"></span>`, `<span attr=test/test></span>`},
 		{`<span attr="test/"></span>`, `<span attr=test/></span>`},
 		{`<span>&amp;</span>`, `<span>&amp;</span>`},
@@ -131,12 +131,11 @@ func TestHTML(t *testing.T) {
 		{`<script><!--<`, `<script><!--<`},
 
 		// bugs
-		{`<amp-analytics type=adobeanalytics_nativeConfig>`, `<amp-analytics type=adobeanalytics_nativeConfig>`}, // #270
-		{`<p>text</p><br>text`, `<p>text</p><br>text`},                                                           // #122
-		{`text <img> text`, `text <img> text`},                                                                   // #89
-		{`text <progress></progress> text`, `text <progress></progress> text`},                                   // #89
-		{`<pre> <x> a  b </x> </pre>`, `<pre> <x> a  b </x> </pre>`},                                             // #82
-		{`<svg id="1"></svg>`, `<svg id="1"></svg>`},                                                             // #67
+		{`<p>text</p><br>text`, `<p>text</p><br>text`},                         // #122
+		{`text <img> text`, `text <img> text`},                                 // #89
+		{`text <progress></progress> text`, `text <progress></progress> text`}, // #89
+		{`<pre> <x> a  b </x> </pre>`, `<pre> <x> a  b </x> </pre>`},           // #82
+		{`<svg id="1"></svg>`, `<svg id="1"></svg>`},                           // #67
 	}
 
 	m := minify.New()
@@ -149,29 +148,6 @@ func TestHTML(t *testing.T) {
 		_, err := io.Copy(w, r)
 		return err
 	})
-	for _, tt := range htmlTests {
-		t.Run(tt.html, func(t *testing.T) {
-			r := bytes.NewBufferString(tt.html)
-			w := &bytes.Buffer{}
-			err := Minify(m, w, r, nil)
-			test.Minify(t, tt.html, err, w.String(), tt.expected)
-		})
-	}
-}
-
-func TestHTMLCSSJS(t *testing.T) {
-	htmlTests := []struct {
-		html     string
-		expected string
-	}{
-		// bugs
-		{`<div style="font-family: Arial, &#39;sans-serif&#39;; font-size: 22px;">`, `<div style=font-family:Arial,sans-serif;font-size:22px>`}, // #272
-	}
-
-	m := minify.New()
-	m.AddFunc("text/html", Minify)
-	m.AddFunc("text/css", css.Minify)
-	m.AddFunc("application/javascript", js.Minify)
 	for _, tt := range htmlTests {
 		t.Run(tt.html, func(t *testing.T) {
 			r := bytes.NewBufferString(tt.html)
@@ -365,8 +341,8 @@ func TestMinifyErrors(t *testing.T) {
 		err  error
 	}{
 		{`<style>abc</style>`, test.ErrPlain},
-		{`<p style="abc"/>`, test.ErrPlain},
-		{`<p onclick="abc"/>`, test.ErrPlain},
+		{`<path style="abc"/>`, test.ErrPlain},
+		{`<path onclick="abc"/>`, test.ErrPlain},
 		{`<svg></svg>`, test.ErrPlain},
 		{`<math></math>`, test.ErrPlain},
 	}
